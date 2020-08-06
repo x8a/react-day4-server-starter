@@ -8,16 +8,11 @@ const hbs          = require('hbs');
 const mongoose     = require('mongoose');
 const logger       = require('morgan');
 const path         = require('path');
+const cors = require('cors');
+const session       = require('express-session');
+const passport      = require('passport');
 
-
-// WHEN INTRODUCING USERS DO THIS:
-// INSTALL THESE DEPENDENCIES: passport-local, passport, bcryptjs, express-session
-// AND UN-COMMENT OUT FOLLOWING LINES:
-
-// const session       = require('express-session');
-// const passport      = require('passport');
-
-// require('./configs/passport');
+require('./configs/passport');
 
 // IF YOU STILL DIDN'T, GO TO 'configs/passport.js' AND UN-COMMENT OUT THE WHOLE FILE
 
@@ -42,12 +37,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // Express View engine setup
-
+/*
 app.use(require('node-sass-middleware')({
   src:  path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public'),
   sourceMap: true
 }));
+*/
       
 
 app.set('views', path.join(__dirname, 'views'));
@@ -56,9 +52,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 
 // ADD SESSION SETTINGS HERE:
-
+app.use(session({
+  secret:"some secret goes here",
+  resave: true,
+  saveUninitialized: true
+}));
 
 // USE passport.initialize() and passport.session() HERE:
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 // default value for title local
@@ -66,13 +68,22 @@ app.locals.title = 'Express - Generated with IronGenerator';
 
 
 // ADD CORS SETTINGS HERE TO ALLOW CROSS-ORIGIN INTERACTION:
-
+app.use(
+  cors({
+    credentials: true,
+    origin: ['http://localhost:3001'] // <== permitir llamadas de este origen
+  })
+);
 
 
 // ROUTES MIDDLEWARE STARTS HERE:
 
 const index = require('./routes/index');
 app.use('/', index);
+app.use('/api',  require('./routes/project-routes'));
+app.use('/api', require('./routes/task-routes'));
+app.use('/api', require('./routes/location-routes'));
+app.use('/api', require('./routes/auth-routes'));
 
 
 module.exports = app;
